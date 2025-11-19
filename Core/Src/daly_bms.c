@@ -7,7 +7,40 @@
 
 
 #include "daly_bms.h"
+#include "cmsis_os.h"
 #include <string.h>
+
+#define DALY_BMS_RX_TIMEOUT_MS   200U
+
+static volatile bool bms_rx_done = false;
+static volatile bool bms_rx_error = false;
+
+static void DalyBMS_ResetRxFlags(void)
+{
+	bms_rx_done = false;
+	bms_rx_error = false;
+}
+
+static bool DalyBMS_WaitForResponse(uint32_t timeout_ms)
+{
+	uint32_t start = HAL_GetTick();
+	do
+	{
+		if (bms_rx_error)
+		{
+			return false;
+		}
+
+		if ((HAL_GetTick() - start) > timeout_ms)
+		{
+			return false;
+		}
+
+		osDelay(1);
+	} while (!bms_rx_done);
+
+	return true;
+}
 
 DalyBMS_Callback_t _bms_request_callback = NULL;
 
@@ -52,16 +85,34 @@ bool DalyBMS_Request(DalyBMS_Command command)
 
 bool DalyBMS_Recive(uint8_t _frame_amount)
 {
+	if (_frame_amount == 0)
+	{
+		return false;
+	}
+
 	// Clear the buffer before receiving new data
 	memset(_rx_frame_buffer, 0x00, sizeof(_rx_frame_buffer));
 	memset(_frame_buff, 0x00, sizeof(_frame_buff));
 
 	size_t _total_bytes = _frame_amount * FRAME_SIZE;
-	// Receive data into the buffer
-	if (HAL_UART_Receive(&huart1, _rx_frame_buffer, _total_bytes, 200) != HAL_OK)
+
+	// Start interrupt-driven reception to avoid being blocked by other tasks
+	DalyBMS_ResetRxFlags();
+	if (HAL_UART_Receive_IT(&huart1, _rx_frame_buffer, _total_bytes) != HAL_OK)
 	{
-		//Debug_Printf("BMS receive error\n");
-		return false;  // Receive error
+		return false;
+	}
+
+	uint32_t timeout_ms = DALY_BMS_RX_TIMEOUT_MS * _frame_amount;
+	if (timeout_ms < DALY_BMS_RX_TIMEOUT_MS)
+	{
+		timeout_ms = DALY_BMS_RX_TIMEOUT_MS;
+	}
+
+	if (!DalyBMS_WaitForResponse(timeout_ms))
+	{
+		HAL_UART_AbortReceive_IT(&huart1);
+		return false;
 	}
 //	else
 //	{
@@ -90,7 +141,7 @@ bool DalyBMS_Recive(uint8_t _frame_amount)
 		if (_rx_checksum == 0x00 && _frame_buff[i][0] == 0x20);	//Debug_Printf("BMS sleep or invalid frame\n");
 	}
 
-	return true;  // Invalid frame or receive error
+	return true;
 }
 
 bool DalyBMS_Get_Pack_Data()
@@ -657,4 +708,20 @@ void DalyBMS_Clear_Get()
 
 void DalyBMS_Set_Callback(DalyBMS_Callback_t callback) {
     _bms_request_callback = callback;
+}
+
+void DalyBMS_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART1)
+	{
+		bms_rx_done = true;
+	}
+}
+
+void DalyBMS_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART1)
+	{
+		bms_rx_error = true;
+	}
 }

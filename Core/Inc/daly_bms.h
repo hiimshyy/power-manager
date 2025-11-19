@@ -221,6 +221,8 @@ bool DalyBMS_Validate_Checksum();
 void DalyBMS_Clear_Get();
 void DalyBMS_Clear_Data();
 void DalyBMS_On_Request_Done();
+void DalyBMS_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+void DalyBMS_UART_ErrorCallback(UART_HandleTypeDef *huart);
 
 typedef void (*DalyBMS_Callback_t)(void);
 extern DalyBMS_Callback_t _bms_request_callback;

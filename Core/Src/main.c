@@ -421,6 +421,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (huart->Instance == USART2) {
         ModbusRTU_RxCpltCallback(huart);
     }
+    else if (huart->Instance == USART1) {
+        DalyBMS_UART_RxCpltCallback(huart);
+    }
 
 }
 
@@ -435,6 +438,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
         HAL_GPIO_TogglePin(LED_FAULT_GPIO_Port, LED_FAULT_Pin);  // Debug: BMS UART error
         // Reset BMS connection status on UART error
         bms_data.connection_status = false;
+        DalyBMS_UART_ErrorCallback(huart);
     }
     // UART3 can be added here if needed
 }
@@ -490,83 +494,82 @@ void StartBMSTask(void const * argument)
   for(;;)
   {
 	  // BMS runs independently - no need to check Modbus status
-	  		switch (_request_counter)
-	  	    {
-	  	  		case 0: // Request pack data & connectivity status
-	  	  			if (DalyBMS_Get_Pack_Data())
-	  	  			{
-	  	  				// LED sáng khi BMS kết nối thành công
-	  	  				HAL_GPIO_WritePin(LED_BMS_GPIO_Port, LED_BMS_Pin, GPIO_PIN_SET);
-	  	  				bms_data.connection_status = true;
-	  	  				_error_counter = 0; // Reset error counter on successful data retrieval
-	  	  				_request_counter++;
-	  	  			}
-	  	  			else
-	  	  			{
-	  	  				// LED tắt khi BMS mất kết nối
-	  	  				HAL_GPIO_WritePin(LED_BMS_GPIO_Port, LED_BMS_Pin, GPIO_PIN_RESET);
-	  	  				_request_counter = 0; // Reset request counter on failure
-	  	  				if (_error_counter < MAX_ERROR) {
-	  	  					_error_counter++;
-	  	  				}
-	  	  				else
-	  	  				{
-	  	  					bms_data.connection_status = false; // Set connection status to false after max errors
-                  DalyBMS_Clear_Data();
-	  	  					_error_counter = 0; // Reset error counter after max errors
-	  	  					if (_bms_request_callback) _bms_request_callback();
-	  	  				}
-	  	  			}
-	  	  			//Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  	  			break;
-	  		  		case 1: // Request min/max cell voltage
-	  		  			_request_counter = DalyBMS_Get_Min_Max_Cell_Voltage() ? (_request_counter + 1) : 0;
+	  switch (_request_counter)
+	  {
+	  	  case 0: // Request pack data & connectivity status
+	  	  	if (DalyBMS_Get_Pack_Data())
+	  	  	{
+	  	  		// LED sáng khi BMS kết nối thành công
+	  	  		HAL_GPIO_WritePin(LED_BMS_GPIO_Port, LED_BMS_Pin, GPIO_PIN_SET);
+	  	  		bms_data.connection_status = true;
+	  	  		_error_counter = 0; // Reset error counter on successful data retrieval
+	  	  		_request_counter++;
+	  	  	}
+	  	  	else
+	  	  	{
+	  	  		// LED tắt khi BMS mất kết nối
+	  	  		HAL_GPIO_WritePin(LED_BMS_GPIO_Port, LED_BMS_Pin, GPIO_PIN_RESET);
+	  	  		_request_counter = 0; // Reset request counter on failure
+	  	  		if (_error_counter < MAX_ERROR) {
+	  	  			_error_counter++;
+	  	  		}
+	  	  		else
+	  	  		{
+	  	  			bms_data.connection_status = false; // Set connection status to false after max errors
+	  	  			DalyBMS_Clear_Data();
+	  	  			_error_counter = 0; // Reset error counter after max errors
+	  	  			if (_bms_request_callback) _bms_request_callback();
+	  	  		}
+	  	  	}
+	  	  	//Debug_Printf("BMS request counter: %d\n", _request_counter);
+	  	  	break;
+	  	case 1: // Request min/max cell voltage
+	  		_request_counter = DalyBMS_Get_Min_Max_Cell_Voltage() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 2: // Request min/max temperature
-	  		  			_request_counter = DalyBMS_Get_Pack_Temperature() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 2: // Request min/max temperature
+	  		_request_counter = DalyBMS_Get_Pack_Temperature() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 3: // Request charge/discharge MOS status
-	  		  			_request_counter = DalyBMS_Get_Charge_Discharge_Status() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 3: // Request charge/discharge MOS status
+	  		_request_counter = DalyBMS_Get_Charge_Discharge_Status() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 4: // Request status info
-	  		  			//Debug_Printf("In case 4!\n");
-	  		  			_request_counter = DalyBMS_Get_Status_Info() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 4: // Request status info
+	  		_request_counter = DalyBMS_Get_Status_Info() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 5: // Request cell voltages
-	  		  			_request_counter = DalyBMS_Get_Cell_Voltages() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 5: // Request cell voltages
+	  		_request_counter = DalyBMS_Get_Cell_Voltages() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 6: // Request cell temperatures
-	  		  			_request_counter = DalyBMS_Get_Cell_Temperatures() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 6: // Request cell temperatures
+	  		_request_counter = DalyBMS_Get_Cell_Temperatures() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 7: // Request cell balance state
-	  		  			_request_counter = DalyBMS_Get_Cell_Balance_State() ? (_request_counter + 1) : 0;
+	  		break;
+	  	case 7: // Request cell balance state
+	  		_request_counter = DalyBMS_Get_Cell_Balance_State() ? (_request_counter + 1) : 0;
 	  		//	  			Debug_Printf("BMS request counter: %d\n", _request_counter);
-	  		  			break;
-	  		  		case 8: // Request failure codes
-	  		  			_request_counter = DalyBMS_Get_Failure_Codes() ? (_request_counter + 1) : 0;
-	  		  			if (_get_static_data) _request_counter = 0; // Reset request counter if static data is requested
-	  		  			if (_bms_request_callback) _bms_request_callback();
-	  		  			break;
-	  		  		case 9: // Request Voltage Thresholds
-	  		  			if (!_get_static_data) _request_counter = DalyBMS_Get_Voltage_Thresholds() ? (_request_counter + 1) : 0;
-	  		  			if (_bms_request_callback) _bms_request_callback();
-	  		  			break;
-	  		  		case 10: // Request Pack Thresholds
-	  		  			if (!_get_static_data) _request_counter = DalyBMS_Get_Pack_Thresholds() ? (_request_counter + 1) : 0;
-	  		  			_request_counter = 0; // Reset request counter after pack thresholds
-	  		  			if (_bms_request_callback) _bms_request_callback();
-	  		  			_get_static_data = true;
-	  		  			break;
-	  		  		default:
-	  		  			break;
-	  		    }
-	  		osDelay(50);;
+	  		break;
+	  	case 8: // Request failure codes
+	  		_request_counter = DalyBMS_Get_Failure_Codes() ? (_request_counter + 1) : 0;
+	  		if (_get_static_data) _request_counter = 0; // Reset request counter if static data is requested
+	  		if (_bms_request_callback) _bms_request_callback();
+	  		break;
+	  	case 9: // Request Voltage Thresholds
+	  		if (!_get_static_data) _request_counter = DalyBMS_Get_Voltage_Thresholds() ? (_request_counter + 1) : 0;
+	  		if (_bms_request_callback) _bms_request_callback();
+	  		break;
+	  	case 10: // Request Pack Thresholds
+	  		if (!_get_static_data) _request_counter = DalyBMS_Get_Pack_Thresholds() ? (_request_counter + 1) : 0;
+	  		_request_counter = 0; // Reset request counter after pack thresholds
+	  		if (_bms_request_callback) _bms_request_callback();
+	  		_get_static_data = true;
+	  		break;
+	  	default:
+	  		break;
+	  }
+	  osDelay(50);
   }
   /* USER CODE END StartBMSTask */
 }

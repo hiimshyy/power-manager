@@ -789,32 +789,31 @@ void ModbusRTU_RxCpltCallback(UART_HandleTypeDef *huart)
         if (modbus_rtu.rx_length < MODBUS_MAX_FRAME_SIZE - 1)
         {
             modbus_rtu.rx_buffer[modbus_rtu.rx_length++] = huart->Instance->DR;
-            modbus_rtu.frame_received = true;
 
             // Check if we have received a complete frame
-            if (modbus_rtu.rx_length >= 6)
+            if (modbus_rtu.rx_length >= MODBUS_MIN_FRAME_SIZE)
             {
-                uint8_t expectedLength = 0;
-                if (modbus_rtu.rx_buffer[1] == 3 || modbus_rtu.rx_buffer[1] == 6)
-                {
-                    expectedLength = 8;
-                }
-                else if (modbus_rtu.rx_buffer[1] == 4)
-                {
-                    expectedLength = 8;
-                }
-                else if (modbus_rtu.rx_buffer[1] == 16)
-                {
-                    if (modbus_rtu.rx_length >= 7)
-                    {
-                        expectedLength = 9 + modbus_rtu.rx_buffer[6];
-                    }
+                uint8_t function_code = modbus_rtu.rx_buffer[1];
+                uint16_t expectedLength = 0;
+
+                switch (function_code) {
+                    case MODBUS_FC_READ_HOLDING_REGISTERS:
+                    case MODBUS_FC_WRITE_SINGLE_REGISTER:
+                        expectedLength = 8; // Slave + FC + Addr(2) + Qty/Value(2) + CRC(2)
+                        break;
+                    case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+                        if (modbus_rtu.rx_length >= 7) {
+                            expectedLength = 9 + modbus_rtu.rx_buffer[6]; // base frame + byte count
+                        }
+                        break;
+                    default:
+                        // Unsupported FC will be handled later
+                        break;
                 }
 
-                // Mark frame as ready for processing (don't process here to avoid conflicts)
-                if (modbus_rtu.rx_length >= expectedLength)
+                if (expectedLength > 0 && modbus_rtu.rx_length >= expectedLength)
                 {
-                    // Frame is complete, will be processed in ModbusRTU_Process()
+                    modbus_rtu.frame_received = true;
                 }
             }
         }
