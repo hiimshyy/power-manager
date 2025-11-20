@@ -82,7 +82,7 @@ void ChargeControl_SetChargeRelay(bool enable)
         HAL_GPIO_WritePin(RL_CHG_GPIO_Port, RL_CHG_Pin, enable ? GPIO_PIN_SET : GPIO_PIN_RESET);
     }
 }
-
+ 
 /**
  * @brief Lấy trạng thái relay sạc hiện tại
  * @retval true nếu relay đang bật

@@ -478,9 +478,11 @@ ModbusStatus_t ModbusRTU_WriteRegister(uint16_t address, uint16_t value)
             return MODBUS_ERROR_VALUE;
             
         case REG_SK60X_ON_OFF:
-            if (SK60X_Set_On_Off(value)) {
-                return MODBUS_OK;
-            }
+        	if(!charge_control.charge_request == false) {
+        		if (SK60X_Set_On_Off(value)) {
+        			return MODBUS_OK;
+        		}
+        	}
             return MODBUS_ERROR_VALUE;
             
         case REG_SK60X_LOCK:

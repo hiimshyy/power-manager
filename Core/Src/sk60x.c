@@ -74,6 +74,8 @@ bool SK60X_Read_Data()
 //		Debug_Printf(" %02X", _sk60_rx_buffer[i]);
 //	}
 //    Debug_Printf("\n");
+    if(((_sk60_rx_buffer[40] << 8) | _sk60_rx_buffer[41]) == 1)
+    {
 
     sk60x_data.v_set = (_sk60_rx_buffer[4] << 8) | _sk60_rx_buffer[5];
     sk60x_data.i_set = (_sk60_rx_buffer[6] << 8) | _sk60_rx_buffer[7];
@@ -90,6 +92,12 @@ bool SK60X_Read_Data()
     sk60x_data.lock = (_sk60_rx_buffer[34] << 8) | _sk60_rx_buffer[35];
     sk60x_data.cvcc = (_sk60_rx_buffer[38] << 8) | _sk60_rx_buffer[39];
     sk60x_data.on_off = (_sk60_rx_buffer[40] << 8) | _sk60_rx_buffer[41];
+    }
+	else
+	{
+		// Clear the struct instead of assigning integer 0
+		memset(&sk60x_data, 0, sizeof(sk60x_data));
+	}
 
     return true;
 }
