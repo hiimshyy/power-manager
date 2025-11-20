@@ -18,36 +18,36 @@ extern SK60X_Data sk60x_data;
 /* Exported functions -------------------------------------------------------*/
 
 /**
- * @brief Khởi tạo hệ thống charge control
+ * @brief Initialize charge control system
  * @retval HAL status
  */
 HAL_StatusTypeDef ChargeControl_Init(void)
 {
-    // Khởi tạo charge control structure
+    // Initialize charge control structure
     charge_control.charge_request = false;
     charge_control.charge_relay_enabled = false;
     charge_control.current_state = CHARGE_STATE_IDLE;
     charge_control.sk60x_conditions_met = false;
     charge_control.last_check_time = HAL_GetTick();
     
-    // Đảm bảo relay sạc bị tắt ban đầu
+    // Ensure charge relay is off initially
     ChargeControl_SetChargeRelay(false);
     
     return HAL_OK;
 }
 
 /**
- * @brief Xử lý yêu cầu sạc từ Modbus register 0x003F
- * @param request: Yêu cầu sạc (true/false)
+ * @brief Process charge request from Modbus register 0x003F
+ * @param request: Charge request (true/false)
  */
 void ChargeControl_HandleRequest(bool request)
 {
-//	bool current_request = (request != 0); // Chuyển đổi từ uint16_t sang bool
+//	bool current_request = (request != 0); // Convert from uint16_t to bool
     if (request != charge_control.charge_request) {
         charge_control.charge_request = request;
         
         if (!request) {
-            // Nếu request bị tắt, ngay lập tức chuyển về IDLE và tắt relay
+            // If request is off, immediately return to IDLE and turn off relay
             charge_control.current_state = CHARGE_STATE_IDLE;
             ChargeControl_SetChargeRelay(false);
         }
@@ -55,12 +55,12 @@ void ChargeControl_HandleRequest(bool request)
 }
 
 /**
- * @brief Kiểm tra điều kiện SK60X
- * @retval true nếu điều kiện thỏa mãn
+ * @brief Check SK60X conditions
+ * @retval true if conditions are met
  */
 bool ChargeControl_CheckSK60XConditions(void)
 {
-    // Điều kiện: sk60x_data.v_in >= 24V && sk60x_data.v_out == sk60x_data.v_set
+    // Conditions: sk60x_data.v_in >= 24V && sk60x_data.v_out == sk60x_data.v_set
     bool v_in_ok = (sk60x_data.v_in >= CHARGE_VOLTAGE_THRESHOLD);
     bool v_out_ok = (sk60x_data.v_out == sk60x_data.v_set);
     
@@ -70,22 +70,22 @@ bool ChargeControl_CheckSK60XConditions(void)
 }
 
 /**
- * @brief Điều khiển relay sạc
- * @param enable: true để bật, false để tắt
+ * @brief Control charge relay
+ * @param enable: true to turn on, false to turn off
  */
 void ChargeControl_SetChargeRelay(bool enable)
 {
     if (enable != charge_control.charge_relay_enabled) {
         charge_control.charge_relay_enabled = enable;
         
-        // Điều khiển GPIO relay (RL_CHG_Pin đã được định nghĩa trong main.h)
+        // Control GPIO relay (RL_CHG_Pin is defined in main.h)
         HAL_GPIO_WritePin(RL_CHG_GPIO_Port, RL_CHG_Pin, enable ? GPIO_PIN_SET : GPIO_PIN_RESET);
     }
 }
  
 /**
- * @brief Lấy trạng thái relay sạc hiện tại
- * @retval true nếu relay đang bật
+ * @brief Get current charge relay status
+ * @retval true if relay is on
  */
 bool ChargeControl_GetChargeRelayStatus(void)
 {
@@ -93,55 +93,55 @@ bool ChargeControl_GetChargeRelayStatus(void)
 }
 
 /**
- * @brief Lấy trạng thái sạc hiện tại cho Modbus
+ * @brief Get current charge state for Modbus
  * @retval Charge state (0, 1, 2)
  */
 uint8_t ChargeControl_GetChargeStateForModbus(void)
 {
-    // Trả về charge state dựa trên trạng thái hiện tại
+    // Return charge state based on current state
     if (charge_control.charge_request) {
         return (uint8_t)charge_control.current_state;
     } else {
-        return 0; // Không có request thì luôn trả về 0
+        return 0; // If no request, always return 0
     }
 }
 
 /**
- * @brief Xử lý logic charge control chính
+ * @brief Process logic charge control
  * @retval Current charge state
  */
 ChargeState_t ChargeControl_Process(void)
 {
     uint32_t current_time = HAL_GetTick();
     
-    // Chỉ xử lý mỗi 100ms để tránh quá tải
+    // Only process every 100ms to avoid overloading
     if (current_time - charge_control.last_check_time < 100) {
         return charge_control.current_state;
     }
     charge_control.last_check_time = current_time;
     
-    // State machine cho charge control
+    // State machine for charge control logic
     switch (charge_control.current_state) {
         case CHARGE_STATE_IDLE:
             if (charge_control.charge_request) {
-                // Đọc dữ liệu từ SK60X
-                SK60X_Read_Data();
+                // Read data from SK60X
+                // SK60X_Read_Data();
                 
-                // Chuyển sang trạng thái waiting
+                // Change to waiting state
                 charge_control.current_state = CHARGE_STATE_WAITING;
             }
             break;
             
         case CHARGE_STATE_WAITING:
             if (!charge_control.charge_request) {
-                // Nếu request bị hủy, quay về IDLE
+                // If request is cancelled, return to IDLE
                 charge_control.current_state = CHARGE_STATE_IDLE;
                 ChargeControl_SetChargeRelay(false);
             } else {
-                // Đọc dữ liệu từ SK60X
+                // Read data from SK60X
                 SK60X_Read_Data();
                 
-                // Kiểm tra điều kiện SK60X
+                // Check SK60X conditions
                 charge_control.sk60x_conditions_met = ChargeControl_CheckSK60XConditions();
                 
                 if (charge_control.sk60x_conditions_met) {
@@ -153,14 +153,14 @@ ChargeState_t ChargeControl_Process(void)
             
         case CHARGE_STATE_CHARGING:
             if (!charge_control.charge_request) {
-                // Request bị hủy
+                // Request is cancelled
                 charge_control.current_state = CHARGE_STATE_IDLE;
                 ChargeControl_SetChargeRelay(false);
             } else {
-                // Đọc dữ liệu từ SK60X
+                // Read data from SK60X
                 SK60X_Read_Data();
                 
-                // Kiểm tra điều kiện SK60X có còn thỏa mãn không
+                // Check SK60X conditions
                 charge_control.sk60x_conditions_met = ChargeControl_CheckSK60XConditions();
                 
                 if (!charge_control.sk60x_conditions_met) {
