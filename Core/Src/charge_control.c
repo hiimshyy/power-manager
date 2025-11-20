@@ -61,10 +61,10 @@ void ChargeControl_HandleRequest(bool request)
 bool ChargeControl_CheckSK60XConditions(void)
 {
     // Conditions: sk60x_data.v_in >= 24V && sk60x_data.v_out == sk60x_data.v_set
-    bool v_in_ok = (sk60x_data.v_in >= CHARGE_VOLTAGE_THRESHOLD);
-    bool v_out_ok = (sk60x_data.v_out == sk60x_data.v_set);
+    bool v_in_ok = (sk60x_data.v_in >= SK60X_INPUT_VOLTAGE_THRESHOLD);
+    bool v_set_ok = (sk60x_data.v_set >= SK60X_SET_VOLTAGE_THRESHOLD);
     
-    bool conditions_met = v_in_ok && v_out_ok;
+    bool conditions_met = v_in_ok && v_set_ok;
     
     return conditions_met;
 }
@@ -78,7 +78,7 @@ void ChargeControl_SetChargeRelay(bool enable)
     if (enable != charge_control.charge_relay_enabled) {
         charge_control.charge_relay_enabled = enable;
         
-        // Control GPIO relay (RL_CHG_Pin is defined in main.h)
+        // Control GPIO relay
         HAL_GPIO_WritePin(RL_CHG_GPIO_Port, RL_CHG_Pin, enable ? GPIO_PIN_SET : GPIO_PIN_RESET);
     }
 }
@@ -121,55 +121,47 @@ ChargeState_t ChargeControl_Process(void)
     charge_control.last_check_time = current_time;
     
     // State machine for charge control logic
-    switch (charge_control.current_state) {
-        case CHARGE_STATE_IDLE:
-            if (charge_control.charge_request) {
-                // Read data from SK60X
-                // SK60X_Read_Data();
-                
-                // Change to waiting state
+    if (charge_control.charge_request) {
+        if (charge_control.current_state != CHARGE_STATE_IDLE) {
+            // Read data from SK60X
+            SK60X_Read_Data();
+        }
+
+        switch (charge_control.current_state) {
+            case CHARGE_STATE_IDLE:
                 charge_control.current_state = CHARGE_STATE_WAITING;
-            }
-            break;
-            
-        case CHARGE_STATE_WAITING:
-            if (!charge_control.charge_request) {
-                // If request is cancelled, return to IDLE
-                charge_control.current_state = CHARGE_STATE_IDLE;
-                ChargeControl_SetChargeRelay(false);
-            } else {
-                // Read data from SK60X
-                SK60X_Read_Data();
+                break;
                 
+            case CHARGE_STATE_WAITING:
                 // Check SK60X conditions
                 charge_control.sk60x_conditions_met = ChargeControl_CheckSK60XConditions();
                 
                 if (charge_control.sk60x_conditions_met) {
-                    ChargeControl_SetChargeRelay(true);
-                    charge_control.current_state = CHARGE_STATE_CHARGING;
+                    charge_control.current_state = CHARGE_STATE_READY;
                 }
-            }
-            break;
-            
-        case CHARGE_STATE_CHARGING:
-            if (!charge_control.charge_request) {
-                // Request is cancelled
-                charge_control.current_state = CHARGE_STATE_IDLE;
-                ChargeControl_SetChargeRelay(false);
-            } else {
-                // Read data from SK60X
-                SK60X_Read_Data();
+                break;
                 
-                // Check SK60X conditions
-                charge_control.sk60x_conditions_met = ChargeControl_CheckSK60XConditions();
+            case CHARGE_STATE_READY:
+                SK60X_Set_On_Off(SK60X_ON);
+                ChargeControl_SetChargeRelay(true);
+                charge_control.current_state = CHARGE_STATE_CHARGING;
+                break;
                 
+            case CHARGE_STATE_CHARGING:
                 if (!charge_control.sk60x_conditions_met) {
-                    ChargeControl_SetChargeRelay(false);
                     charge_control.current_state = CHARGE_STATE_WAITING;
+                    ChargeControl_SetChargeRelay(false);
                 }
-            }
-            break;
+                break;
+        }
     }
-    
+    else
+    {
+        charge_control.current_state = CHARGE_STATE_IDLE;
+        SK60X_Set_On_Off(SK60X_OFF);
+        // Clear the struct instead of assigning integer 0
+		memset(&sk60x_data, 0, sizeof(sk60x_data));
+        ChargeControl_SetChargeRelay(false);
+    }
     return charge_control.current_state;
 }

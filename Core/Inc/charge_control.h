@@ -15,21 +15,23 @@
 #include "main.h"
 
 /* Defines ------------------------------------------------------------------*/
-#define CHARGE_VOLTAGE_THRESHOLD    24.0f   // Ngưỡng điện áp 24V cho sk60x_data.v_in
+#define SK60X_INPUT_VOLTAGE_THRESHOLD    24.0f   // Threshold input voltage for sk60x_data.v_in
+#define SK60X_SET_VOLTAGE_THRESHOLD    16.8f   // Threshold set voltage for sk60x_data.v_set
 
 /* Exported types -----------------------------------------------------------*/
 typedef enum {
-    CHARGE_STATE_IDLE = 0,          // Không được phép sạc
-    CHARGE_STATE_WAITING = 1,       // Đang chờ điều kiện sạc
-    CHARGE_STATE_CHARGING = 2       // Đang sạc
+    CHARGE_STATE_IDLE = 0,          // Not allowed to charge
+    CHARGE_STATE_WAITING = 1,       // Waiting for charge conditions
+    CHARGE_STATE_READY = 2,         // Charge finished
+    CHARGE_STATE_CHARGING = 3       // Charging
 } ChargeState_t;
 
 typedef struct {
-    bool charge_request;            // Yêu cầu sạc từ thanh ghi 0x003F
-    bool charge_relay_enabled;      // Trạng thái relay sạc
-    ChargeState_t current_state;    // Trạng thái sạc hiện tại
-    bool sk60x_conditions_met;      // Điều kiện SK60X đã thỏa mãn
-    uint32_t last_check_time;       // Thời gian kiểm tra cuối cùng
+    bool charge_request;            // Charge request from Modbus register 0x003F
+    bool charge_relay_enabled;      // Charge relay status
+    ChargeState_t current_state;    // Current charge state
+    bool sk60x_conditions_met;      // SK60X conditions met
+    uint32_t last_check_time;       // Last check time
 } ChargeControl_t;
 
 /* Exported variables -------------------------------------------------------*/
@@ -38,43 +40,43 @@ extern ChargeControl_t charge_control;
 /* Exported function prototypes ---------------------------------------------*/
 
 /**
- * @brief Khởi tạo hệ thống charge control
+ * @brief Initialize charge control system
  * @retval HAL status
  */
 HAL_StatusTypeDef ChargeControl_Init(void);
 
 /**
- * @brief Xử lý yêu cầu sạc từ Modbus register 0x003F
- * @param request: Yêu cầu sạc (true/false)
+ * @brief Process charge request from Modbus register 0x003F
+ * @param request: Charge request (true/false)
  */
 void ChargeControl_HandleRequest(bool request);
 
 /**
- * @brief Xử lý logic charge control chính
+ * @brief Process logic charge control
  * @retval Current charge state
  */
 ChargeState_t ChargeControl_Process(void);
 
 /**
- * @brief Kiểm tra điều kiện SK60X
- * @retval true nếu điều kiện thỏa mãn
+ * @brief Check SK60X conditions
+ * @retval true if conditions are met
  */
 bool ChargeControl_CheckSK60XConditions(void);
 
 /**
- * @brief Điều khiển relay sạc
- * @param enable: true để bật, false để tắt
+ * @brief Control charge relay
+ * @param enable: true to turn on, false to turn off
  */
 void ChargeControl_SetChargeRelay(bool enable);
 
 /**
- * @brief Lấy trạng thái relay sạc hiện tại
- * @retval true nếu relay đang bật
+ * @brief Get current charge relay status
+ * @retval true if relay is on
  */
 bool ChargeControl_GetChargeRelayStatus(void);
 
 /**
- * @brief Lấy trạng thái sạc hiện tại cho Modbus
+ * @brief Get current charge state for Modbus
  * @retval Charge state (0, 1, 2)
  */
 uint8_t ChargeControl_GetChargeStateForModbus(void);

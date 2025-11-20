@@ -36,6 +36,11 @@ typedef enum {
 	SET_ON_OFF = 0x12,
 } SK60X_Command;
 
+typedef enum {
+	SK60X_ON = 1,
+	SK60X_OFF = 0,
+} SK60X_State;
+
 typedef struct {
 	uint16_t v_set;
 	uint16_t i_set;

@@ -1,7 +1,7 @@
 ../Core/Src/sk60x.c:18:17:Calculate_CRC.constprop	12	static
 ../Core/Src/sk60x.c:31:13:SK60X_Send_Command	8	static
 ../Core/Src/sk60x.c:46:6:SK60X_Read_Data	16	static
-../Core/Src/sk60x.c:105:6:SK60X_Set_On_Off	0	static
-../Core/Src/sk60x.c:119:6:SK60X_Set_Lock	0	static
-../Core/Src/sk60x.c:133:6:SK60X_Set_Voltage	0	static
-../Core/Src/sk60x.c:146:6:SK60X_Set_Current	0	static
+../Core/Src/sk60x.c:96:6:SK60X_Set_On_Off	0	static
+../Core/Src/sk60x.c:110:6:SK60X_Set_Lock	0	static
+../Core/Src/sk60x.c:124:6:SK60X_Set_Voltage	0	static
+../Core/Src/sk60x.c:137:6:SK60X_Set_Current	0	static
