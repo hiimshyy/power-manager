@@ -5,15 +5,15 @@ This document defines the Modbus RTU register map used for communication between
 
   | Address   | Name | Description | Data Type | Values / Notes | Default | Access |
   |-----------|------|-------------|-----------|----------------|---------|--------|
-  | `0x0100`  | `slave_id` | Modbus slave address | `uint8` | `1–247` | `0x01` | Read/Write |
-  | `0x0101`  | `baudrate_code`| UART baudrate setting (encoded) | `uint8` | `1=9600`, `2=19200`, `3=38400`, `4=57600`, `5=115200` | `1` | Read/Write |
-  | `0x0102`  | `parity`| UART parity | `uint8` | `0=None`, `1=Even`, `2=Odd` | `0` | Read/Write |
-  | `0x0103`  | `stop_bits` | UART stop bits | `uint8` | `1` or `2` | `1` | Read/Write |
-  | `0x0104`  | `module_type` | Type of module | `uint8` | `2 = Power module` | `2` | Read Only |
-  | `0x0105`  | `fw_version` | Firmware version (encoded) | `uint16` | e.g. `0x0101 = v1.01` | - | Read only |
-  | `0x0106`  | `hw_version` | Hardware version (encoded) | `uint16` | e.g. `0x0101 = v1.01` | - | Read only |
-  | `0x0107`  | `system_stt` | System status flags | `uint16` | `0=Normal`,`1=Warning`,`2=Charging` | `0` | Read only |
-  | `0x0108`  | `system_err` | System error flags | `int16` | `0:COMM_ERR`,`1:OVER_VOLT`,`2=UNDER_VOLT`,`3=OVER_CURRENT`,`4:OVER_TEMP` | - | Read only |
+  | `0x0100`  | `slave_id` | Modbus slave address | `uint16` | `1–247` | `0x02` | Read Only |
+  | `0x0101`  | `baudrate_code`| UART baudrate setting (encoded) | `uint16` | `1=9600`, `2=19200`, `3=38400`, `4=57600`, `5=115200` | `5` | Read/Write |
+  | `0x0102`  | `parity`| UART parity | `uint16` | `0=None`, `1=Even`, `2=Odd` | `0` | Read/Write |
+  | `0x0103`  | `stop_bits` | UART stop bits | `uint16` | `1` or `2` | `1` | Read/Write |
+  | `0x0104`  | `module_type` | Type of module | `uint16` | `2 = Power module` | `2` | Read Only |
+  | `0x0105`  | `fw_version` | Firmware version (encoded) | `uint16` | e.g. `0x0101 = v1.01` | `0x0101` | Read Only |
+  | `0x0106`  | `hw_version` | Hardware version (encoded) | `uint16` | e.g. `0x0101 = v1.01` | `0x0101` | Read Only |
+  | `0x0107`  | `system_stt` | System status flags | `uint16` | Bit 0: BMS, Bit 1: SK60X, Bit 2: Power relay, Bit 3: Charge relay | `0` | Read Only |
+  | `0x0108`  | `system_err` | System error flags | `uint16` | Bit 0: BMS Error, Bit 1: BMS Fault, Bit 2: SK60X Error | - | Read Only |
   | `0x0109`  | `reset_err` | Reset error counters/flags | `uint16` | `0=IDLE`,`1=RESET` | `0` | Read/Write |
 
   ---
@@ -24,30 +24,30 @@ This document defines the Modbus RTU register map used for communication between
 | Address  | Name | Unit | Description | Data Type | Scaling | Access |
 |----------|------|------|-------------|-----------|---------|--------|
 | `0x0000` | voltage_v | V | Voltage of battery pack | `uint16` | /10.0 | Read Only |
-| `0x0001` | current_a | A | Current of battery pack | `uint16` | /10.0 | Read Only |
+| `0x0001` | current_a | A | Current of battery pack | `int16` | /10.0 | Read Only |
 | `0x0002` | soc_percent | % | State of Charge | `uint16` | /10.0 | Read Only |
 | `0x0003` | max_cell_v | mV | Maximum voltage among cells | `uint16` | - | Read Only |
 | `0x0004` | min_cell_v | mV | Minimum voltage among cells | `uint16` | - | Read Only |
-| `0x0005` | max_cell_index |-| Index of max voltage cell | `uint8` | - | Read Only |
-| `0x0006` | min_cell_index |-| Index of min voltage cell | `uint8` | - | Read Only |
-| `0x0007` | cell_diff | mV | Voltage difference between cells | `uint8` | - | Read Only |
-| `0x0008` | temperature | °C | Average temperature | `uint8` | - | Read Only |
-| `0x0009` | connection_status |-| BMS Connection Status (0/1 = NG/OK) | `bool` |-| Read Only |
-| `0x000A` | charge_discharge_status|-| Charge/discharge status flags | `uint8` |-| Read Only  |
-| `0x000B` | charge_mos |-| Charge MOSFET status | `bool` |-| Read Only |
-| `0x000C` | discharge_mos |-| Discharge MOSFET status | `bool` |-| Read Only |
-| `0x000D` | bms_life_cycle | count | Number of BMS power cycles | `uint8` |-| Read Only |
-| `0x000E` | residual_capacity_mAh | mAh | Remaining battery capacity | `uint8` |-| Read Only |
-| `0x000F` | num_cells | count | Number of battery cells | `uint8` | - | Read Only  |
-| `0x0010` | num_temp_sensors | count | Number of temperature sensors | `uint8 ` |-| Read Only |
-| `0x0011` | charge_status |-| Charging in progress (1 = Yes) | `bool` |-| Read Only |
-| `0x0012` | discharge_status |-| Discharging in progress (1 = Yes) | `bool` |-| Read Only |
-| `0x0013` | charge_discharge_cycle | count | Number of full charge-discharge cycles | `uint8` |-| Read Only  |
-| `0x0014–19` | cell_voltage_mv[6] | mV | Voltage of each cell (6 cells) | `uint8[6]` |-| Read Only |
-| `0x001A–1B` | temperature_c[2] | °C | Temperature sensor values | `uint8[2]` |-| Read Only |
-| `0x001C–21` | cell_balance_state[6] | bit | Per-cell balancing status | `bool[6]` |-| Read Only |
-| `0x0022` | cell_balance_active |-| Global balancing status | `bool` |-| Read Only |
-| `0x0023` | fault_flags | bitmask | Fault status flags | `uint8` |-| Read Only |
+| `0x0005` | max_cell_index |-| Index of max voltage cell | `uint16` | - | Read Only |
+| `0x0006` | min_cell_index |-| Index of min voltage cell | `uint16` | - | Read Only |
+| `0x0007` | cell_diff | mV | Voltage difference between cells | `uint16` | - | Read Only |
+| `0x0008` | temperature | °C | Average temperature | `uint16` | - | Read Only |
+| `0x0009` | connection_status |-| BMS Connection Status (0/1 = NG/OK) | `uint16` |-| Read Only |
+| `0x000A` | charge_discharge_status|-| Charge/discharge status flags | `uint16` |-| Read Only  |
+| `0x000B` | charge_mos |-| Charge MOSFET status | `uint16` |-| Read Only |
+| `0x000C` | discharge_mos |-| Discharge MOSFET status | `uint16` |-| Read Only |
+| `0x000D` | bms_life_cycle | count | Number of BMS power cycles | `uint16` |-| Read Only |
+| `0x000E` | residual_capacity_mAh | mAh | Remaining battery capacity | `uint16` |-| Read Only |
+| `0x000F` | num_cells | count | Number of battery cells | `uint16` | - | Read Only  |
+| `0x0010` | num_temp_sensors | count | Number of temperature sensors | `uint16` |-| Read Only |
+| `0x0011` | charge_status |-| Charging in progress (1 = Yes) | `uint16` |-| Read Only |
+| `0x0012` | discharge_status |-| Discharging in progress (1 = Yes) | `uint16` |-| Read Only |
+| `0x0013` | charge_discharge_cycle | count | Number of full charge-discharge cycles | `uint16` |-| Read Only  |
+| `0x0014–19` | cell_voltage_mv[6] | mV | Voltage of each cell (6 cells) | `uint16[6]` |-| Read Only |
+| `0x001A–1B` | temperature_c[2] | °C | Temperature sensor values | `uint16[2]` |-| Read Only |
+| `0x001C–21` | cell_balance_state[6] | bit | Per-cell balancing status | `uint16[6]` |-| Read Only |
+| `0x0022` | cell_balance_active |-| Global balancing status | `uint16` |-| Read Only |
+| `0x0023` | fault_flags | bitmask | Fault status flags | `uint16` |-| Read Only |
 | `0x0024` | max_cell_threshold_1  | mV | Max cell voltage threshold 1 | `uint16` | - | Read/Write |
 | `0x0025` | min_cell_threshold_1  | mV | Min cell voltage threshold 1 | `uint16` | - | Read/Write |
 | `0x0026` | max_cell_threshold_2  | mV | Max cell voltage threshold 2 | `uint16` | - | Read/Write |
@@ -85,35 +85,35 @@ This document defines the Modbus RTU register map used for communication between
 
 | Address | Name | Unit | Description | Data Type | Scaling | Access    |
 |---------|------|------|-------------|-----------|---------|-----------|
-| `0x0040` | v_out_12V | V | Voltage of 12V output | `uint8` | /10.0 | Read Only |
-| `0x0041` | i_out_12V | A | Current of 12V output | `uint8` | /10.0 | Read Only |
-| `0x0042` | p_out_12V | W | Power of 12V output | `uint8` | /10.0 | Read Only |
-| `0x0043` | v_out_5V | V | Voltage of 5V output | `uint8` | /10.0 | Read Only |
-| `0x0044` | i_out_5v | A | Current of 5V output | `uint8`  | /10.0 | Read Only |
-| `0x0045` | p_out_5V | W | Power of 5V output | `uint8` | /10.0 | Read Only |
-| `0x0046` | v_out_3V3 | V | Voltage of 3.3V output | `uint8`  | /10.0 | Read Only |
-| `0x0047` | i_out_3V3 | A | Current of 3.3V output  | `uint8`  | /10.0 | Read Only |
-| `0x0048` | p_out_3V3 | W | Power of 3.3V output | `uint8` | /10.0 | Read Only |
+| `0x0040` | v_out_12V | V | Voltage of 12V output | `uint16` | /10.0 | Read Only |
+| `0x0041` | i_out_12V | A | Current of 12V output | `uint16` | /10.0 | Read Only |
+| `0x0042` | p_out_12V | W | Power of 12V output | `uint16` | /10.0 | Read Only |
+| `0x0043` | v_out_5V | V | Voltage of 5V output | `uint16` | /10.0 | Read Only |
+| `0x0044` | i_out_5v | A | Current of 5V output | `uint16`  | /10.0 | Read Only |
+| `0x0045` | p_out_5V | W | Power of 5V output | `uint16` | /10.0 | Read Only |
+| `0x0046` | v_out_3V3 | V | Voltage of 3.3V output | `uint16`  | /10.0 | Read Only |
+| `0x0047` | i_out_3V3 | A | Current of 3.3V output  | `uint16`  | /10.0 | Read Only |
+| `0x0048` | p_out_3V3 | W | Power of 3.3V output | `uint16` | /10.0 | Read Only |
 
 ### 0x0049 - Relay state
 | Address | Name | Unit | Description | Data Type | Scaling | Access    |
 |---------|------|------|-------------|-----------|---------|-----------|
-| `0x0049` | rl_3V3 | - | State of 3V3 relay | `uint8` | - | Read Only |
-| `0x004A` | rl_5V | - | State of 5V relay | `uint8` | - | Read Only |
-| `0x004B` | rl_12V | - | State of 12V relay | `uint8`  | - | Read Only |
-| `0x004C` | rl_faul | - | State of Faul relay | `uint8` | - | Read Only |
-| `0x004D` | rl_charge | - | State of Charge relay | `uint8` | - | Read Only |
-| `0x004F` | use_v_ths | - | Setting voltage usage threshold | `uint16`  | /100.0 | Read/Write |
+| `0x0049` | rl_3V3 | - | State of 3V3 relay | `uint16` | - | Read Only |
+| `0x004A` | rl_5V | - | State of 5V relay | `uint16` | - | Read Only |
+| `0x004B` | rl_12V | - | State of 12V relay | `uint16`  | - | Read Only |
+| `0x004C` | rl_faul | - | State of Faul relay | `uint16` | - | Read Only |
+| `0x004D` | rl_charge | - | State of Charge relay | `uint16` | - | Read Only |
+| `0x004E` | use_v_ths | V | Setting voltage usage threshold | `uint16`  | /100.0 | Read/Write |
 
 ---
 
 ## 📝 Notes
 
 - **Data Types:**
-  - `uint8`: 1 register (16-bit) where only 1 byte is used (typically lower byte).
-  - `uint16`: 1 full 16-bit register.
-  - `bool`: 1-bit flag stored inside a full 16-bit register.
-  - `array[N]`: Consecutive registers with N elements.
+  - `uint16`: 1 full 16-bit register (Modbus standard register size).
+  - `int16`: 1 full 16-bit signed register (for values that can be negative, e.g. current).
+  - `uint16[N]`: Consecutive registers with N elements, each 16-bit.
+  - **Note**: Modbus RTU always uses 16-bit registers. Even boolean values are returned as `uint16` (0 or 1).
 
 - **Scaling:**
   - Some values are scaled (e.g., `/10.0`), meaning the raw register value must be divided by 10 to get the actual unit.
