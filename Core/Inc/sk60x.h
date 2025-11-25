@@ -32,7 +32,7 @@ extern UART_HandleTypeDef huart3;
 typedef enum {
 	SET_VOLTAGE = 0x01,
 	SET_CURRENT = 0x02,
-	SET_LOCK = 0x11,
+	SET_LOCK = 0x0F,
 	SET_ON_OFF = 0x12,
 } SK60X_Command;
 
@@ -42,20 +42,20 @@ typedef enum {
 } SK60X_State;
 
 typedef struct {
-	uint16_t v_set;
-	uint16_t i_set;
-	uint16_t v_out;
-	uint16_t i_out;
-	uint16_t p_out;
-	uint16_t v_in;
-	uint16_t i_in;
-	uint16_t lock;
-	uint16_t temp;
-	uint16_t h_use;
-	uint16_t m_use;
-	uint16_t s_use;
-	uint16_t cvcc;
-	uint16_t on_off;
+	uint16_t v_set;   // Voltage set (0.1V units, e.g., 240 = 24.0V)
+	uint16_t i_set;   // Current set (0.01A units, e.g., 500 = 5.00A)
+	uint16_t v_out;   // Voltage output (0.1V units)
+	uint16_t i_out;   // Current output (0.01A units)
+	uint16_t p_out;   // Power output (0.1W units)
+	uint16_t v_in;    // Voltage input (0.1V units)
+	uint16_t i_in;    // Current input (0.01A units)
+	uint16_t lock;    // Lock status (0=unlocked, 1=locked)
+	uint16_t temp;    // Temperature (0.1°C units)
+	uint16_t h_use;   // Hours used
+	uint16_t m_use;   // Minutes used
+	uint16_t s_use;   // Seconds used
+	uint16_t cvcc;    // CV/CC mode (0=CC, 1=CV)
+	uint16_t on_off;  // On/Off status (0=OFF, 1=ON)
 
 } SK60X_Data;
 

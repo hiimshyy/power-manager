@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -54,7 +55,7 @@ osThreadId modbusTaskHandle;
 /* USER CODE BEGIN PV */
 INA219_t ina_12v, ina_5v, ina_3v3;  // Commented out - not using INA219
 bool relay_power_enabled = false;
-float voltage_threshold = 10.0f;
+float voltage_threshold = 13.5f;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +115,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   DalyBMS_Set_Callback(DalyBMS_On_Request_Done);
   ModbusRTU_Init(&huart2);
+  ChargeControl_Init();
   // Commented out - not using INA219 and I2C1
   INA219_Init(&ina_12v, &hi2c1, INA219_ADDR_12V, 0.1f, 3.0f);   // Rshunt = 0.1Ω, max current 3A
   INA219_Init(&ina_5v,  &hi2c1, INA219_ADDR_5V,  0.1f, 3.0f);
@@ -181,6 +183,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -207,6 +210,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
+  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
@@ -453,6 +462,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)

@@ -24,6 +24,9 @@ Core/Src/charge_control.o: ../Core/Src/charge_control.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h \
  ../Core/Inc/sk60x.h ../Core/Inc/main.h ../Core/Inc/daly_bms.h \
  ../Core/Inc/ina219.h ../Core/Inc/modbus_rtu.h ../Core/Inc/modbus_regs.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h \
@@ -69,6 +72,9 @@ Core/Src/charge_control.o: ../Core/Src/charge_control.c \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h:
 ../Core/Inc/sk60x.h:
 ../Core/Inc/main.h:
 ../Core/Inc/daly_bms.h:

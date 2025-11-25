@@ -62,22 +62,22 @@ This document defines the Modbus RTU register map used for communication between
 ### 0x0030 - SK60X Data
 | Address | Name | Unit | Description | Data Type | Scaling | Access |
 |---------|------|------|-------------|-----------|---------|--------|
-| `0x0030`| v_set | V | Voltage setpoint | `uint8` | /10.0 | Read/Write |
-| `0x0031`| i_set | A | Current setpoint | `uint8` | /10.0 | Read/Write |
-| `0x0032`| v_out | V | Output voltage | `uint8` | /10.0 | Read Only |
-| `0x0033`| i_out | A | Output current | `uint8` | /10.0 | Read Only |
-| `0x0034`| p_out | W | Output power   | `uint8` | /10.0 | Read Only |
-| `0x0035`| v_in  | V | Input voltage  | `uint8` | /10.0 | Read Only |
-| `0x0036`| i_in  | A | Input current  | `uint8` | /10.0 | Read Only |
-| `0x0037`| temp | °C | Temperature of SK60X | `uint8` | - | Read Only |
-| `0x0038` | h_use | h | Time used – hours | `uint8` | - | Read Only |
-| `0x0039` | m_use | m | Time used – minutes | `uint8` | - | Read Only |
-| `0x003A` | s_use | s | Time used – seconds | `uint8` | - | Read Only |
-| `0x003B` | cvcc |-| CVCC Operational status | `bool` | - | Read Only |
-| `0x003C` | on_off |-| Output ON/OFF state | `bool` | - | Read/Write |
-| `0x003D` | lock |-| Disable all button | `bool` | - | Read/Write |
-| `0x003E` | charge_state |-| 0 = IDLE, 1 = WAITING, 2 = CHARGE | `uint16` | - | Read Only |
-| `0x003F` | charge_request |-| 0 = NOT, 1 = REQUEST| `bool` | - | Read/Write |
+| `0x0030`| v_set | V | Voltage setpoint | `uint16` | /10.0 | Read/Write |
+| `0x0031`| i_set | A | Current setpoint | `uint16` | /10.0 | Read/Write |
+| `0x0032`| v_out | V | Output voltage | `uint16` | /10.0 | Read Only |
+| `0x0033`| i_out | A | Output current | `uint16` | /10.0 | Read Only |
+| `0x0034`| p_out | W | Output power   | `uint16` | /10.0 | Read Only |
+| `0x0035`| v_in  | V | Input voltage  | `uint16` | /10.0 | Read Only |
+| `0x0036`| i_in  | A | Input current  | `uint16` | /10.0 | Read Only |
+| `0x0037`| temp | °C | Temperature of SK60X | `uint16` | - | Read Only |
+| `0x0038` | h_use | h | Time used – hours | `uint16` | - | Read Only |
+| `0x0039` | m_use | m | Time used – minutes | `uint16` | - | Read Only |
+| `0x003A` | s_use | s | Time used – seconds | `uint16` | - | Read Only |
+| `0x003B` | cvcc |-| 0 = `CV`, 1 = `CC` | `uint16` | - | Read Only |
+| `0x003C` | on_off |-| Output state: 0 = `OFF`, 1 = `ON` | `uint16` | - | Read/Write |
+| `0x003D` | lock |-| En/Disable Button: 0 = `ENABLE`, 1 = `DISABLE` | `uint16` | - | Read/Write |
+| `0x003E` | charge_state |-| 0 = `IDLE`, 1 = `WAITING`, 2 = `READY`, 3 = `CHARGING` | `uint16` | - | Read Only |
+| `0x003F` | charge_request |-| 0 = `NOT`, 1 = `REQUEST` | `uint16` | - | Read/Write |
 
 
 

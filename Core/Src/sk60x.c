@@ -9,6 +9,7 @@
 
 
 #include "sk60x.h"
+#include "main.h"
 #include <string.h>
 
 SK60X_Data sk60x_data = {0};
@@ -40,7 +41,9 @@ static bool SK60X_Send_Command(uint8_t command, uint16_t value)
 	_sk60_tx_buffer[6] = crc & 0xFF;
 	_sk60_tx_buffer[7] = (crc >> 8) & 0xFF;
 
-	return (HAL_UART_Transmit(&huart3, _sk60_tx_buffer, REQUEST_FRAME_SIZE, 100) == HAL_OK);
+	bool result = (HAL_UART_Transmit(&huart3, _sk60_tx_buffer, REQUEST_FRAME_SIZE, 100) == HAL_OK);
+	
+	return result;
 }
 
 bool SK60X_Read_Data()
@@ -63,10 +66,17 @@ bool SK60X_Read_Data()
 //    	Debug_Printf(" %02X", _sk60_tx_buffer[i]);
 //    Debug_Printf("\n");
 
-    if(HAL_UART_Transmit(&huart3, _sk60_tx_buffer, REQUEST_FRAME_SIZE, 100) != HAL_OK)
+    // Turn on LED when transmitting
+    HAL_GPIO_WritePin(LED_SK_GPIO_Port, LED_SK_Pin, GPIO_PIN_SET);
+    
+    // Send request
+    if(HAL_UART_Transmit(&huart3, _sk60_tx_buffer, REQUEST_FRAME_SIZE, 100) != HAL_OK) {
     	return false;
-    if(HAL_UART_Receive(&huart3, _sk60_rx_buffer, RESPONSE_FRAME_SIZE, 500) != HAL_OK)
+    }
+    // Receive response
+    if(HAL_UART_Receive(&huart3, _sk60_rx_buffer, RESPONSE_FRAME_SIZE,500) != HAL_OK) {
     	return false;
+    }
 
 //    Debug_Printf("<SK60x> - Received:\n");
 //    for (size_t i = 0; i < RESPONSE_FRAME_SIZE; i++)
@@ -74,22 +84,52 @@ bool SK60X_Read_Data()
 //		Debug_Printf(" %02X", _sk60_rx_buffer[i]);
 //	}
 //    Debug_Printf("\n");
-    sk60x_data.v_set = (_sk60_rx_buffer[4] << 8) | _sk60_rx_buffer[5];
-    sk60x_data.i_set = (_sk60_rx_buffer[6] << 8) | _sk60_rx_buffer[7];
-    sk60x_data.v_out = (_sk60_rx_buffer[8] << 8) | _sk60_rx_buffer[9];
-    sk60x_data.i_out = (_sk60_rx_buffer[10] << 8) | _sk60_rx_buffer[11];
-    sk60x_data.p_out = (_sk60_rx_buffer[12] << 8) | _sk60_rx_buffer[13];
-    sk60x_data.v_in  = (_sk60_rx_buffer[14] << 8) | _sk60_rx_buffer[15];
-    sk60x_data.i_in  = (_sk60_rx_buffer[16] << 8) | _sk60_rx_buffer[17];
 
-    sk60x_data.h_use  = (_sk60_rx_buffer[24] << 8) | _sk60_rx_buffer[25];
-    sk60x_data.m_use  = (_sk60_rx_buffer[26] << 8) | _sk60_rx_buffer[27];
-    sk60x_data.s_use  = (_sk60_rx_buffer[28] << 8) | _sk60_rx_buffer[29];
-    sk60x_data.temp   = (_sk60_rx_buffer[30] << 8) | _sk60_rx_buffer[31];
-    sk60x_data.lock = (_sk60_rx_buffer[34] << 8) | _sk60_rx_buffer[35];
-    sk60x_data.cvcc = (_sk60_rx_buffer[38] << 8) | _sk60_rx_buffer[39];
-    sk60x_data.on_off = (_sk60_rx_buffer[40] << 8) | _sk60_rx_buffer[41];
+    // Validate response frame
+    // Check device address
+    if (_sk60_rx_buffer[0] != SK60X_ADDR) {
+        return false;
+    }
+    
+    // Check function code
+    if (_sk60_rx_buffer[1] != READ_REGISTERS) {
+        return false;
+    }
+    
+    // Check byte count (should be QUANTITY * 2 = 0x26 = 38 bytes)
+    if (_sk60_rx_buffer[2] != (QUANTITY * 2)) {
+        return false;
+    }
+    
+    // Verify CRC
+    uint16_t received_crc = (_sk60_rx_buffer[RESPONSE_FRAME_SIZE - 1] << 8) | _sk60_rx_buffer[RESPONSE_FRAME_SIZE - 2];
+    uint16_t calculated_crc = Calculate_CRC(_sk60_rx_buffer, RESPONSE_FRAME_SIZE - 2);
+    if (received_crc != calculated_crc) {
+        return false;
+    }
 
+    // Parse data ONLY after all validations pass
+    // Do NOT clear sk60x_data here to avoid race condition with Modbus
+    // Modbus response format: [Addr][FC][ByteCount][Data...][CRC_L][CRC_H]
+    sk60x_data.v_set = (_sk60_rx_buffer[3] << 8) | _sk60_rx_buffer[4];      // bytes 3-4
+    sk60x_data.i_set = (_sk60_rx_buffer[5] << 8) | _sk60_rx_buffer[6];      // bytes 5-6  
+    sk60x_data.v_out = (_sk60_rx_buffer[7] << 8) | _sk60_rx_buffer[8];      // bytes 7-8
+    sk60x_data.i_out = (_sk60_rx_buffer[9] << 8) | _sk60_rx_buffer[10];     // bytes 9-10
+    sk60x_data.p_out = (_sk60_rx_buffer[11] << 8) | _sk60_rx_buffer[12];    // bytes 11-12
+    sk60x_data.v_in  = (_sk60_rx_buffer[13] << 8) | _sk60_rx_buffer[14];    // bytes 13-14
+    sk60x_data.i_in  = (_sk60_rx_buffer[15] << 8) | _sk60_rx_buffer[16];    // bytes 15-16
+
+    sk60x_data.h_use  = (_sk60_rx_buffer[23] << 8) | _sk60_rx_buffer[24];
+    sk60x_data.m_use  = (_sk60_rx_buffer[25] << 8) | _sk60_rx_buffer[26];
+    sk60x_data.s_use  = (_sk60_rx_buffer[27] << 8) | _sk60_rx_buffer[28];
+    sk60x_data.temp   = (_sk60_rx_buffer[29] << 8) | _sk60_rx_buffer[30];
+    sk60x_data.lock   = (_sk60_rx_buffer[33] << 8) | _sk60_rx_buffer[34];
+    sk60x_data.cvcc   = (_sk60_rx_buffer[37] << 8) | _sk60_rx_buffer[38];
+    sk60x_data.on_off = (_sk60_rx_buffer[39] << 8) | _sk60_rx_buffer[40];
+
+    // Turn off LED after successfully receiving data
+    HAL_GPIO_WritePin(LED_SK_GPIO_Port, LED_SK_Pin, GPIO_PIN_RESET);
+    
     return true;
 }
 
