@@ -572,9 +572,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
 - **STM32CubeMX**: [ST Website](https://www.st.com/en/development-tools/stm32cubemx.html)
 - **ST-Link Utility**: [ST Website](https://www.st.com/en/development-tools/stsw-link004.html)
 - **Modbus Tools**:
-  - ModScan (Windows)
-  - pymodbus (Python)
-  - QModMaster (Cross-platform)
+  - *ModbusPoll*: [modbus tool](https://www.modbustools.com/modbus_poll.html)
 
 ---
 
@@ -582,9 +580,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
 
 Tài liệu này cung cấp thông tin tổng quan về dự án STM32 Power Management System. Nếu có bất kỳ câu hỏi nào, vui lòng tham khảo code comments hoặc liên hệ với người phát triển.
 
-**Chúc bạn thành công với dự án!** 🚀
-
 ---
 
-*Tài liệu được tạo tự động - Cập nhật lần cuối: [Ngày]*
+*Tài liệu được tạo tự động - Cập nhật lần cuối: [26/12/2026]*
 
