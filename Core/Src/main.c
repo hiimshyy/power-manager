@@ -448,6 +448,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
         // Reset BMS connection status on UART error
         bms_data.connection_status = false;
         DalyBMS_UART_ErrorCallback(huart);
+        DalyBMS_UART_Recovery();  // Clear error flags and free UART after re-plug
     }
     // UART3 can be added here if needed
 }

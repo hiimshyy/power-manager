@@ -725,3 +725,22 @@ void DalyBMS_UART_ErrorCallback(UART_HandleTypeDef *huart)
 		bms_rx_error = true;
 	}
 }
+
+void DalyBMS_UART_Recovery(void)
+{
+	/* Abort any ongoing reception and clear UART error flags so the next
+	 * request can start cleanly after a cable re-plug. */
+	HAL_UART_AbortReceive_IT(&huart1);
+
+	__HAL_UART_CLEAR_PEFLAG(&huart1);
+	__HAL_UART_CLEAR_FEFLAG(&huart1);
+	__HAL_UART_CLEAR_NEFLAG(&huart1);
+	__HAL_UART_CLEAR_OREFLAG(&huart1);
+
+#if defined(UART_RXDATA_FLUSH_REQUEST)
+	/* Flush RX data register to drop any residual bytes */
+	__HAL_UART_SEND_REQ(&huart1, UART_RXDATA_FLUSH_REQUEST);
+#endif
+
+	DalyBMS_ResetRxFlags();
+}
