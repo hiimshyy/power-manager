@@ -7,15 +7,12 @@
 
 1. [Tổng Quan Dự Án](#1-tổng-quan-dự-án)
 2. [Kiến Trúc Hệ Thống](#2-kiến-trúc-hệ-thống)
-3. [Cấu Trúc Dự Án](#3-cấu-trúc-dự-án)
-4. [Yêu Cầu Phần Cứng](#4-yêu-cầu-phần-cứng)
-5. [Yêu Cầu Phần Mềm](#5-yêu-cầu-phần-mềm)
-6. [Hướng Dẫn Build và Flash](#6-hướng-dẫn-build-và-flash)
-7. [Các Module Chính](#7-các-module-chính)
-8. [Cấu Hình Phần Cứng](#8-cấu-hình-phần-cứng)
-9. [Giao Tiếp Modbus RTU](#9-giao-tiếp-modbus-rtu)
-10. [Troubleshooting](#10-troubleshooting)
-11. [Tài Liệu Tham Khảo](#11-tài-liệu-tham-khảo)
+3. [Yêu Cầu Phần Cứng](#3-yêu-cầu-phần-cứng)
+4. [Các Module Chính](#4-các-module-chính)
+5. [Cấu Hình Phần Cứng](#5-cấu-hình-phần-cứng)
+6. [Giao Tiếp Modbus RTU](#6-giao-tiếp-modbus-rtu)
+7. [Troubleshooting](#7-troubleshooting)
+8. [Tài Liệu Tham Khảo](#8-tài-liệu-tham-khảo)
 
 ---
 
@@ -56,10 +53,10 @@ Dự án **STM32 Power Management** là một hệ thống quản lý nguồn th
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    STM32F103C8TX                            │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ FreeRTOS │  │  BMS     │  │  SK60X   │  │ Modbus   │   │
-│  │  Tasks   │  │  Module  │  │  Module  │  │  RTU     │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ FreeRTOS │  │  BMS     │  │  SK60X   │  │ Modbus   │     │
+│  │  Tasks   │  │  Module  │  │  Module  │  │  RTU     │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
 │       │             │              │              │         │
 └───────┼─────────────┼──────────────┼──────────────┼─────────┘
         │             │              │              │
@@ -100,64 +97,16 @@ Hệ thống sử dụng 4 tasks chính:
 
 ---
 
-## 3. CẤU TRÚC DỰ ÁN
+## 3. YÊU CẦU PHẦN CỨNG
 
-```
-power_management/
-├── Core/
-│   ├── Inc/                    # Header files
-│   │   ├── main.h              # GPIO definitions, includes
-│   │   ├── daly_bms.h          # Daly BMS interface
-│   │   ├── sk60x.h             # SK60X charger interface
-│   │   ├── modbus_rtu.h        # Modbus RTU implementation
-│   │   ├── modbus_regs.h       # Modbus register definitions
-│   │   ├── charge_control.h    # Charge control logic
-│   │   ├── ina219.h            # INA219 sensor interface
-│   │   └── FreeRTOSConfig.h    # FreeRTOS configuration
-│   ├── Src/                     # Source files
-│   │   ├── main.c              # Main entry, task creation
-│   │   ├── daly_bms.c          # BMS communication
-│   │   ├── sk60x.c             # SK60X communication
-│   │   ├── modbus_rtu.c        # Modbus RTU implementation
-│   │   ├── charge_control.c    # Charge control logic
-│   │   ├── ina219.c            # INA219 sensor driver
-│   │   └── freertos.c          # FreeRTOS hooks
-│   └── Startup/
-│       └── startup_stm32f103c8tx.s  # Startup code
-├── Drivers/                     # STM32 HAL drivers
-│   ├── STM32F1xx_HAL_Driver/
-│   └── CMSIS/
-├── Middlewares/                 # Middleware libraries
-│   ├── ST/
-│   │   └── STM32_USB_Device_Library/  # USB CDC
-│   └── Third_Party/
-│       └── FreeRTOS/          # FreeRTOS kernel
-├── USB_DEVICE/                  # USB CDC configuration
-│   ├── App/
-│   └── Target/
-├── Docs/                        # Documentation
-│   ├── modbus_register_map.md  # Modbus register mapping
-│   ├── power_manage_flow.png   # System flow diagram
-│   └── pin_used.png            # Pin assignment
-├── Release/                     # Build output
-│   └── power_management.hex    # Flash file
-├── power_management.ioc        # STM32CubeMX configuration
-├── STM32F103C8TX_FLASH.ld      # Linker script
-└── README.md                    # Project overview
-```
-
----
-
-## 4. YÊU CẦU PHẦN CỨNG
-
-### 4.1. MCU và Ngoại Vi
+### 3.1. MCU và Ngoại Vi
 
 - **STM32F103C8TX** (Blue Pill compatible)
 - **Clock**: HSE 8MHz, PLL x9 = 72MHz
 - **Flash**: 64KB
 - **RAM**: 20KB
 
-### 4.2. Kết Nối Phần Cứng
+### 3.2. Kết Nối Phần Cứng
 
 | Module | Interface | Pin | Baudrate | Notes |
 |--------|-----------|-----|----------|-------|
@@ -166,7 +115,7 @@ power_management/
 | SK60X | UART3 | PB10/PB11 | 115200 | 8N1 |
 | INA219 | I2C1 | PB6/PB7 | 100kHz | Multiple addresses |
 
-### 4.3. GPIO Pins
+### 3.3. GPIO Pins
 
 **Output (Relay Control):**
 - `RL_12V`: PA7 - Relay nguồn 12V
@@ -190,86 +139,9 @@ power_management/
 
 ---
 
-## 5. YÊU CẦU PHẦN MỀM
+## 4. CÁC MODULE CHÍNH
 
-### 5.1. Development Tools
-
-- **STM32CubeIDE** (hoặc STM32CubeMX + Keil/IAR)
-- **STM32CubeMX** để cấu hình pin và ngoại vi
-- **ARM GCC Toolchain** (đi kèm STM32CubeIDE)
-- **ST-Link Utility** hoặc **OpenOCD** để flash firmware
-
-### 5.2. Dependencies
-
-- **STM32 HAL Library** (v1.1.x)
-- **FreeRTOS** (v10.x)
-- **STM32 USB Device Library** (CDC class)
-
-### 5.3. Build System
-
-Dự án sử dụng **STM32CubeIDE** với build system tự động. File cấu hình:
-- `.project` - Eclipse project file
-- `.cproject` - C/C++ build configuration
-- `power_management.ioc` - STM32CubeMX configuration
-
----
-
-## 6. HƯỚNG DẪN BUILD VÀ FLASH
-
-### 6.1. Build Project
-
-**Cách 1: Sử dụng STM32CubeIDE**
-
-1. Mở STM32CubeIDE
-2. File → Import → Existing Projects into Workspace
-3. Chọn thư mục `power_management`
-4. Project → Build All (Ctrl+B)
-5. File hex sẽ được tạo tại: `Release/power_management.hex`
-
-**Cách 2: Sử dụng Makefile (nếu có)**
-
-```bash
-cd Release
-make clean
-make all
-```
-
-### 6.2. Flash Firmware
-
-**Cách 1: Sử dụng STM32CubeIDE**
-
-1. Kết nối ST-Link với board
-2. Right-click project → Run As → STM32 MCU C/C++ Application
-3. Hoặc: Run → Run Configurations → STM32 MCU C/C++ Application
-
-**Cách 2: Sử dụng ST-Link Utility**
-
-1. Mở ST-Link Utility
-2. File → Open File → Chọn `power_management.hex`
-3. Target → Program & Verify
-4. Hoặc sử dụng command line:
-```bash
-st-flash write Release/power_management.hex 0x8000000
-```
-
-**Cách 3: Sử dụng OpenOCD**
-
-```bash
-openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "program Release/power_management.hex verify reset exit"
-```
-
-### 6.3. Debug
-
-1. Kết nối ST-Link
-2. STM32CubeIDE: Run → Debug (F11)
-3. Có thể đặt breakpoint và xem biến
-4. USB CDC có thể dùng để printf debug (nếu đã cấu hình)
-
----
-
-## 7. CÁC MODULE CHÍNH
-
-### 7.1. Daly BMS Module (`daly_bms.h/c`)
+### 4.1. Daly BMS Module (`daly_bms.h/c`)
 
 **Chức năng:**
 - Giao tiếp với Daly BMS qua UART1
@@ -303,7 +175,7 @@ BMS task đọc 11 loại dữ liệu theo thứ tự:
 10. Voltage thresholds
 11. Pack thresholds
 
-### 7.2. SK60X Module (`sk60x.h/c`)
+### 4.2. SK60X Module (`sk60x.h/c`)
 
 **Chức năng:**
 - Giao tiếp với bộ sạc SK60X qua UART3
@@ -321,7 +193,7 @@ BMS task đọc 11 loại dữ liệu theo thứ tự:
 SK60X_Data sk60x_data;  // Chứa dữ liệu SK60X
 ```
 
-### 7.3. Charge Control Module (`charge_control.h/c`)
+### 4.3. Charge Control Module (`charge_control.h/c`)
 
 **Chức năng:**
 - Logic điều khiển quá trình sạc
@@ -346,7 +218,7 @@ SK60X_Data sk60x_data;  // Chứa dữ liệu SK60X
 - SK60X set voltage > 16.8V
 - Charge request = true (từ Modbus register 0x003F)
 
-### 7.4. Modbus RTU Module (`modbus_rtu.h/c`)
+### 4.4. Modbus RTU Module (`modbus_rtu.h/c`)
 
 **Chức năng:**
 - Triển khai giao thức Modbus RTU
@@ -368,7 +240,7 @@ SK60X_Data sk60x_data;  // Chứa dữ liệu SK60X
 
 **Register Map:** Xem file `Docs/modbus_register_map.md`
 
-### 7.5. INA219 Module (`ina219.h/c`)
+### 4.5. INA219 Module (`ina219.h/c`)
 
 **Chức năng:**
 - Đọc cảm biến INA219 qua I2C
@@ -387,9 +259,9 @@ SK60X_Data sk60x_data;  // Chứa dữ liệu SK60X
 
 ---
 
-## 8. CẤU HÌNH PHẦN CỨNG
+## 5. CẤU HÌNH PHẦN CỨNG
 
-### 8.1. STM32CubeMX Configuration
+### 5.1. STM32CubeMX Configuration
 
 File cấu hình: `power_management.ioc`
 
@@ -445,7 +317,7 @@ File cấu hình: `power_management.ioc`
    - Mode: Device Only
    - Class: Communication Device Class (Virtual Port Com)
 
-### 8.2. Điều Khiển Relay Nguồn
+### 5.2. Điều Khiển Relay Nguồn
 
 Logic điều khiển relay nguồn (12V, 5V, 3.3V) trong `defaultTask`:
 
@@ -470,13 +342,13 @@ else if (relay_power_enabled && bms_data.voltage < voltage_threshold) {
 
 ---
 
-## 9. GIAO TIẾP MODBUS RTU
+## 6. GIAO TIẾP MODBUS RTU
 
-### 9.1. Tổng Quan
+### 6.1. Tổng Quan
 
 Hệ thống cung cấp giao diện Modbus RTU qua UART2 (RS485) để giao tiếp với thiết bị master. Tất cả dữ liệu từ BMS, SK60X, INA219 được expose qua Modbus registers.
 
-### 9.2. Register Map
+### 6.2. Register Map
 
 Xem chi tiết trong file: `Docs/modbus_register_map.md`
 
@@ -506,13 +378,13 @@ Xem chi tiết trong file: `Docs/modbus_register_map.md`
    - Firmware/hardware version
    - System status, errors
 
-### 9.3. Function Codes Hỗ Trợ
+### 6.3. Function Codes Hỗ Trợ
 
 - **0x03**: Read Holding Registers
 - **0x06**: Write Single Register
 - **0x10**: Write Multiple Registers
 
-### 9.4. Ví Dụ Sử Dụng
+### 6.4. Ví Dụ Sử Dụng
 
 **Đọc điện áp pin:**
 ```
@@ -538,7 +410,7 @@ Address: 0x0000
 Quantity: 10 (đọc 10 register từ 0x0000)
 ```
 
-### 9.5. Cấu Hình Modbus
+### 6.5. Cấu Hình Modbus
 
 Có thể thay đổi cấu hình Modbus qua các register:
 
@@ -551,9 +423,9 @@ Có thể thay đổi cấu hình Modbus qua các register:
 
 ---
 
-## 10. TROUBLESHOOTING
+## 7. TROUBLESHOOTING
 
-### 10.1. BMS Không Kết Nối
+### 7.1. BMS Không Kết Nối
 
 **Triệu chứng:**
 - LED_BMS không sáng
@@ -574,7 +446,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
    - Kiểm tra `bms_data.connection_status` trong code
    - Xem log UART1 nếu có
 
-### 10.2. SK60X Không Phản Hồi
+### 7.2. SK60X Không Phản Hồi
 
 **Triệu chứng:**
 - LED_SK không sáng
@@ -590,7 +462,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
    - SK60X có được cấp nguồn không?
    - Địa chỉ Modbus của SK60X (mặc định 0x01)
 
-### 10.3. Modbus Không Hoạt Động
+### 7.3. Modbus Không Hoạt Động
 
 **Triệu chứng:**
 - Master không nhận được response
@@ -612,7 +484,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
    - Sử dụng Modbus tool (ModScan, pymodbus) để test
    - Kiểm tra CRC có đúng không
 
-### 10.4. Relay Không Bật
+### 7.4. Relay Không Bật
 
 **Triệu chứng:**
 - Relay không hoạt động khi điện áp > 13.5V
@@ -630,7 +502,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
 3. **Kiểm tra nguồn:**
    - Relay có được cấp nguồn không?
 
-### 10.5. INA219 Không Đọc Được
+### 7.5. INA219 Không Đọc Được
 
 **Triệu chứng:**
 - Dữ liệu INA219 = 0 trong Modbus
@@ -646,7 +518,7 @@ Có thể thay đổi cấu hình Modbus qua các register:
    - Sensor có được cấp nguồn không?
    - Shunt resistor có đúng không?
 
-### 10.6. FreeRTOS Task Crash
+### 7.6. FreeRTOS Task Crash
 
 **Triệu chứng:**
 - Hệ thống treo hoặc reset
@@ -665,52 +537,36 @@ Có thể thay đổi cấu hình Modbus qua các register:
    - Kiểm tra xem có watchdog timer không
    - Reset watchdog trong task
 
-### 10.7. Build Errors
-
-**Lỗi thường gặp:**
-
-1. **Missing includes:**
-   - Kiểm tra include paths trong project settings
-   - Đảm bảo tất cả header files có trong `Core/Inc`
-
-2. **Linker errors:**
-   - Kiểm tra linker script (`STM32F103C8TX_FLASH.ld`)
-   - Kiểm tra memory size (Flash 64KB, RAM 20KB)
-
-3. **HAL errors:**
-   - Đảm bảo đã generate code từ STM32CubeMX
-   - Kiểm tra HAL version compatibility
-
 ---
 
-## 11. TÀI LIỆU THAM KHẢO
+## 8. TÀI LIỆU THAM KHẢO
 
-### 11.1. Tài Liệu STM32
+### 8.1. Tài Liệu STM32
 
 - **STM32F103C8 Datasheet**: [ST Website](https://www.st.com)
 - **STM32F1 HAL User Manual**: UM1850
 - **STM32CubeIDE User Guide**: UM2606
 
-### 11.2. Tài Liệu FreeRTOS
+### 8.2. Tài Liệu FreeRTOS
 
 - **FreeRTOS Reference Manual**: [FreeRTOS.org](https://www.freertos.org)
 - **FreeRTOS API Documentation**
 
-### 11.3. Tài Liệu Module
+### 8.3. Tài Liệu Module
 
 - **Daly BMS Protocol**: Xem trong code `daly_bms.h`
 - **SK60X Protocol**: Xem trong code `sk60x.h`
 - **INA219 Datasheet**: [TI Website](https://www.ti.com)
 - **Modbus RTU Specification**: Modbus.org
 
-### 11.4. Tài Liệu Dự Án
+### 8.4. Tài Liệu Dự Án
 
 - `README.md` - Tổng quan dự án
 - `Docs/modbus_register_map.md` - Chi tiết Modbus registers
 - `Docs/power_manage_flow.png` - Sơ đồ luồng hệ thống
 - `Docs/pin_used.png` - Sơ đồ chân
 
-### 11.5. Tools
+### 8.5. Tools
 
 - **STM32CubeIDE**: [ST Website](https://www.st.com/en/development-tools/stm32cubeide.html)
 - **STM32CubeMX**: [ST Website](https://www.st.com/en/development-tools/stm32cubemx.html)
@@ -719,35 +575,6 @@ Có thể thay đổi cấu hình Modbus qua các register:
   - ModScan (Windows)
   - pymodbus (Python)
   - QModMaster (Cross-platform)
-
----
-
-## 12. THÔNG TIN LIÊN HỆ VÀ HỖ TRỢ
-
-### 12.1. Thông Tin Dự Án
-
-- **Tên dự án**: STM32 Power Management System
-- **Phiên bản firmware**: v1.01 (xem register 0x0105)
-- **Ngày bàn giao**: [Điền ngày]
-
-### 12.2. Lưu Ý Quan Trọng
-
-1. **Backup code**: Luôn backup code trước khi chỉnh sửa
-2. **Version control**: Sử dụng Git để quản lý phiên bản
-3. **Testing**: Test kỹ trước khi deploy
-4. **Documentation**: Cập nhật tài liệu khi có thay đổi
-
-### 12.3. Checklist Bàn Giao
-
-- [ ] Code đã được test đầy đủ
-- [ ] Tài liệu đã được cập nhật
-- [ ] Hardware đã được kiểm tra
-- [ ] Firmware đã được build và flash thành công
-- [ ] Modbus communication đã được test
-- [ ] BMS communication đã được test
-- [ ] SK60X communication đã được test
-- [ ] Relay control đã được test
-- [ ] INA219 sensors đã được test
 
 ---
 
